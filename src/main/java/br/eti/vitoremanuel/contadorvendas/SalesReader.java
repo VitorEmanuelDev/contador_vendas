@@ -146,16 +146,16 @@ public class SalesReader {
 
 				System.out.println("Total de vendas para " + months[0] + ": R$ " + toCurrency(somaJuly));
 
-				BigDecimal somaSeptember = BigDecimal.ZERO;
+		BigDecimal somaSeptember = BigDecimal.ZERO;
 
-				somaSeptember = sales.stream()
-						.filter(s -> s.getStatus().equals(status))
-						.filter(s -> s.getSaleDate().getMonth().equals(months[1]))
-						.map(s -> s.getValue())
-						.reduce(BigDecimal.ZERO, BigDecimal::add); ;
+		somaSeptember = sales.stream()
+				.filter(s -> s.getStatus().equals(status))
+				.filter(s -> s.getSaleDate().getMonth().equals(months[1]))
+				.map(s -> s.getValue())
+				.reduce(BigDecimal.ZERO, BigDecimal::add); ;
 
 
-						System.out.println("Total de vendas para " + months[1] + ": R$ " + toCurrency(somaSeptember));
+				System.out.println("Total de vendas para " + months[1] + ": R$ " + toCurrency(somaSeptember));
 
 
 
@@ -183,18 +183,23 @@ public class SalesReader {
 		// TODO qual a quantidade de vendas por metodo de pagamento por ano?
 		
 		
-		System.out.println("\nVendas por método de pagamento");
+		System.out.println("\nVendas por método de pagamento\n");
 		
 		sales.stream()	
-		  .collect(Collectors.groupingBy(s -> s.getPaymentMethod(), 
-				  Collectors.reducing(BigDecimal.ZERO, Sale::getValue, BigDecimal::add)))
-		.entrySet()
-		.stream()
-		.toList()
-		.forEach(metodo -> {
-		    System.out.println(metodo.getKey() + " = R$" + toCurrency(metodo.getValue()));
-		});
-
+		  .collect(Collectors.groupingBy(s -> s.getPaymentMethod(),
+				  Collectors.groupingBy(s -> s.getSaleDate().getYear(),
+				  Collectors.reducing(BigDecimal.ZERO, Sale::getValue, BigDecimal::add))))
+		  .entrySet()
+			.stream()
+			.toList()
+			.forEach(metodo -> {
+			  metodo.getValue().entrySet()
+					   .forEach(ano -> {
+						   System.out.println(metodo.getKey() + " " + ano.getKey() + " R$ " + toCurrency(ano.getValue()));
+					   });
+			  System.out.println("\n");
+			});
+	
 
 	}
 
@@ -202,14 +207,13 @@ public class SalesReader {
 	public void top3BestSellers() {
 		// TODO um ranking com os 3 melhores vendedores com base no valor total de vendas
 
-System.out.println("\nRanking dos três melhores vendedores");
+System.out.println("\nRanking dos três melhores vendedores\n");
 		
 		sales.stream()	
 		  .collect(Collectors.groupingBy(s -> s.getSeller(), 
 				  Collectors.reducing(BigDecimal.ZERO, Sale::getValue, BigDecimal::add)))
 		.entrySet()
 		.stream()
-		//.sorted(Map.Entry.comparingByValue())
 		 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder())) 
 		.limit(3)
 		  .forEach(vendedor -> {
